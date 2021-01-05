@@ -7,31 +7,31 @@ NOW=`date`
 
 function clockIn {
 	echo "IN  | $NOW | $1" >> $DEFAULT_FILE
-	printf "Clocked IN $NOW"
+	echo "Clocked IN $NOW"
 	exit 0
 }
 
 function clockOut {
 	echo "OUT | $NOW | $1" >> $DEFAULT_FILE
-	printf "Clocked OUT $NOW"
+	echo "Clocked OUT $NOW"
 	exit 0
 }
 
 function displayHelp {
 	echo "Nothing Happened"
-	printf "Usage: ./timeclock.sh <in|out> <tags/notes>"
+	echo "Usage: ./timeclock.sh <in|out> <tags/notes>"
 	exit 0
 }
 
 function handleOptions {
 	shift
-	# local OPTIND
-	local TAG
-	TAG=""
+	local tag
+	tag=""
 	while getopts ":t:" opt; do
 		case ${opt} in
 			t )
-				TAG="$OPTARG"
+				echo "$OPTARG"
+				tag="$OPTARG"
 				;;
 			\? )
 				echo "Invalid Option: -$OPTARG" 1>&2
@@ -45,7 +45,12 @@ function handleOptions {
 	done
 	shift $((OPTIND -1))
 
-	echo "$TAG"
+	echo "$tag"
+}
+
+function clockStatus {
+	local status=$(tail -n 1 $DEFAULT_FILE | awk '{print $1}')
+	echo $status
 }
 
 ##### BUSINESS #####
@@ -54,11 +59,18 @@ COMMAND=$1;
 
 case "$COMMAND" in
 	in )
-		clockIn "$(handleOptions $*)"
+		if [[ $(clockStatus) == 'OUT' ]]; then
+			clockIn "$(handleOptions $*)"
+		fi
+		echo "Nothing happened, you are already clocked in!"
 		;;
 	out )
-		clockOut "$(handleOptions $*)"
+		if [[ $(clockStatus) == 'IN' ]]; then
+			clockOut "$(handleOptions $*)"
+		fi
+		echo "Nothing happened, you are already clocked out!"
 		;;
 	* )
 		displayHelp
 esac
+
