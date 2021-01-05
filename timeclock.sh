@@ -3,6 +3,8 @@
 DEFAULT_FILE="$(date '+%a-%b-%d-%Y').timesheet"
 NOW=`date` 
 
+##### HELPER FUNCTIONS #####
+
 function clockIn {
 	echo "IN  | $NOW | $1" >> $DEFAULT_FILE
 	printf "Clocked IN $NOW"
@@ -21,63 +23,42 @@ function displayHelp {
 	exit 0
 }
 
-function validateCommand {
-	POSSIBLE_COMMANDS=('in' 'out') 
-	if [[ ! "${POSSIBLE_COMMANDS[@]}" =~ "$1" ]]; then
-		displayHelp	
-	elif [[ $1 == "" ]]; then
-		displayHelp
-	fi
+function handleOptions {
+	shift
+	# local OPTIND
+	local TAG
+	TAG=""
+	while getopts ":t:" opt; do
+		case ${opt} in
+			t )
+				TAG="$OPTARG"
+				;;
+			\? )
+				echo "Invalid Option: -$OPTARG" 1>&2
+				exit 1
+				;;
+			: )
+				echo "Invalid Option: -$OPTARG requires an argument" 1>&2
+				exit 1
+				;;
+		esac
+	done
+	shift $((OPTIND -1))
+
+	echo "$TAG"
 }
 
+##### BUSINESS #####
+
 COMMAND=$1;
-validateCommand $COMMAND
 
 case "$COMMAND" in
-	\in )
-		shift
-		TAG=''
-		while getopts ":t:" opt; do
-			case ${opt} in
-				t )
-					TAG=$OPTARG
-					;;
-				\? )
-					echo "Invalid Option: -$OPTARG" 1>&2
-					exit 1
-					;;
-				: )
-					echo "Invalid Option: -$OPTARG requires an argument" 1>&2
-					exit 1
-					;;
-			esac
-		done
-		shift $((OPTIND -1))
-		clockIn "$TAG"
+	in )
+		clockIn "$(handleOptions $*)"
 		;;
-
-	\out )
-		shift
-		TAG=''
-		while getopts ":t:" opt; do
-			case ${opt} in
-				t )
-					TAG=$OPTARG
-					;;
-				\? )
-					echo "Invalid Option: -$OPTARG" 1>&2
-					exit 1
-					;;
-				: )
-					echo "Invalid Option: -$OPTARG requires an argument" 1>&2
-					exit 1
-					;;
-			esac
-		done
-		shift $((OPTIND -1))
-		clockOut "$TAG"
+	out )
+		clockOut "$(handleOptions $*)"
 		;;
-
-	#"" )
-		#displayHelp
+	* )
+		displayHelp
 esac
