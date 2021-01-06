@@ -1,18 +1,23 @@
 #!/bin/bash
 
+DELIM=" | "
 DEFAULT_FILE="$(date '+%a-%b-%d-%Y').timesheet"
 NOW=`date` 
 
-##### HELPER FUNCTIONS #####
-
 function clockIn {
-	echo "IN  | $NOW | $1" >> $DEFAULT_FILE
+	local this_line="IN$DELIM"
+	this_line+="$NOW$DELIM"
+	this_line+="$1"
+	echo $this_line >> $DEFAULT_FILE
 	echo "Clocked IN $NOW"
 	exit 0
 }
 
 function clockOut {
-	echo "OUT | $NOW | $1" >> $DEFAULT_FILE
+	local this_line="OUT$DELIM"
+	this_line+="$NOW$DELIM"
+	this_line+="$1"
+	echo $this_line >> $DEFAULT_FILE
 	echo "Clocked OUT $NOW"
 	exit 0
 }
@@ -44,36 +49,23 @@ function getTags {
 	done
 	shift $((OPTIND -1))
 
-	echo "$tag"
+	echo $tag
 }
 
 function getLastStatus {
 	local status
 	status=""
 	if [[ -e $DEFAULT_FILE ]]; then
-		status=$(tail -n 1 $DEFAULT_FILE | awk '{print $1}')
+		local last_line=$(tail -n 1 $DEFAULT_FILE)
+		status=$(checkOneAction "$last_line")
 	fi
+
 	echo $status
 }
 
-##### BUSINESS #####
+function checkOneAction {
+	local this_line
+	this_line=$1
 
-command=$1;
-clockStatus=$(getLastStatus)
-
-case "$command" in
-	in )
-		if [[ $clockStatus == 'OUT' || -z $clockStatus ]]; then
-			clockIn "$(getTags "$@")"
-		fi
-		echo "Nothing happened, you are already clocked in!"
-		;;
-	out )
-		if [[ $clockStatus == 'IN' || -z $clockStatus ]]; then
-			clockOut "$(getTags "$@")"
-		fi
-		echo "Nothing happened, you are already clocked out!"
-		;;
-	* )
-		displayHelp
-esac
+	echo $this_line | awk -F "$DELIM" '{print $1}'
+}

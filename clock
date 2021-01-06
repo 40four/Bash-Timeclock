@@ -1,0 +1,30 @@
+#!/bin/bash
+
+source timeclock.sh
+
+command=$1;
+clockStatus=$(getLastStatus)
+
+case "$command" in
+	hours )
+		mapfile the_file < $DEFAULT_FILE
+
+		for line in "${the_file[@]}"; do
+			checkOneAction "$line"
+		done
+		;;
+	in )
+		if [[ $clockStatus == 'OUT' || -z $clockStatus ]]; then
+			clockIn "$(getTags "$@")"
+		fi
+		echo "Nothing happened, you are already clocked in!"
+		;;
+	out )
+		if [[ $clockStatus == 'IN' || -z $clockStatus ]]; then
+			clockOut "$(getTags "$@")"
+		fi
+		echo "Nothing happened, you are already clocked out!"
+		;;
+	* )
+		displayHelp
+esac
