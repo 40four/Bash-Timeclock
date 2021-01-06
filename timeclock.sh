@@ -23,14 +23,13 @@ function displayHelp {
 	exit 0
 }
 
-function handleOptions {
+function getTags {
 	shift
 	local tag
 	tag=""
 	while getopts ":t:" opt; do
 		case ${opt} in
 			t )
-				echo "$OPTARG"
 				tag="$OPTARG"
 				;;
 			\? )
@@ -48,29 +47,33 @@ function handleOptions {
 	echo "$tag"
 }
 
-function clockStatus {
-	local status=$(tail -n 1 $DEFAULT_FILE | awk '{print $1}')
+function getLastStatus {
+	local status
+	status=""
+	if [[ -e $DEFAULT_FILE ]]; then
+		status=$(tail -n 1 $DEFAULT_FILE | awk '{print $1}')
+	fi
 	echo $status
 }
 
 ##### BUSINESS #####
 
-COMMAND=$1;
+command=$1;
+clockStatus=$(getLastStatus)
 
-case "$COMMAND" in
+case "$command" in
 	in )
-		if [[ $(clockStatus) == 'OUT' ]]; then
-			clockIn "$(handleOptions $*)"
+		if [[ $clockStatus == 'OUT' || -z $clockStatus ]]; then
+			clockIn "$(getTags "$@")"
 		fi
 		echo "Nothing happened, you are already clocked in!"
 		;;
 	out )
-		if [[ $(clockStatus) == 'IN' ]]; then
-			clockOut "$(handleOptions $*)"
+		if [[ $clockStatus == 'IN' || -z $clockStatus ]]; then
+			clockOut "$(getTags "$@")"
 		fi
 		echo "Nothing happened, you are already clocked out!"
 		;;
 	* )
 		displayHelp
 esac
-
