@@ -52,20 +52,47 @@ function getTags {
 	echo $tag
 }
 
-function getLastStatus {
+function getLastAction {
 	local status
 	status=""
 	if [[ -e $DEFAULT_FILE ]]; then
 		local last_line=$(tail -n 1 $DEFAULT_FILE)
-		status=$(checkOneAction "$last_line")
+		status=$(getAction "$last_line")
 	fi
 
 	echo $status
 }
 
-function checkOneAction {
+function getAction {
 	local this_line
 	this_line=$1
 
 	echo $this_line | awk -F "$DELIM" '{print $1}'
+}
+
+function getDateTime {
+	local this_line
+	this_line=$1
+
+	echo $this_line | awk -v delim="$DELIM" -f csv.awk
+}
+
+function actionIsIn {
+	local this_action
+	this_action=$1
+
+	if [[ $this_action == 'IN' ]]; then
+		true
+	else
+		false
+	fi
+}
+
+function addTime {
+	local time1
+	local time2
+	time1=$1
+	time2=$2
+
+
 }
