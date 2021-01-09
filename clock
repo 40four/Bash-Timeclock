@@ -6,31 +6,6 @@ command=$1;
 clockStatus=$(getLastAction)
 
 case "$command" in
-	hours )
-		mapfile the_file < $DEFAULT_FILE
-		num_of_lines=${#the_file[@]}
-		total_time=0
-		for (( i = 0; i < $num_of_lines; i++ )); do
-			cur_line=${the_file[$i]}
-			if actionIsIn "$(getAction "$cur_line")"; then
-				next_ind=$(( $i + 1 ))
-				next_line=${the_file[$next_ind]}
-				time_one=$(getDateTime "$cur_line")
-				time_two=$(getDateTime "$next_line")
-				epoch_one=$(date -d "$time_one" +"%s")
-				epoch_two=$(date -d "$time_two" +"%s")
-				time_delta=$(( $epoch_two - $epoch_one ))
-				total_time=$(( $total_time + $time_delta ))
-			fi
-		done
-		echo $total_time
-		hours=$(( $total_time / 3600 ))
-		total_minutes=$(( $total_time / 60 ))
-		minutes_remainder=$(( $total_minutes % 60 ))
-		seconds_remainder=$(( $total_time % 60 ))
-		format_seconds="$hours hours and $minutes_remainder minutes"
-		echo "Total time for $DEFAULT_FILE = $format_seconds"
-		;;
 	in )
 		if [[ $clockStatus == 'OUT' || -z $clockStatus ]]; then
 			clockIn "$(getTags "$@")"
@@ -42,6 +17,9 @@ case "$command" in
 			clockOut "$(getTags "$@")"
 		fi
 		echo "Nothing happened, you are already clocked out!"
+		;;
+	hours )
+		calcHours
 		;;
 	* )
 		displayHelp

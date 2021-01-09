@@ -88,11 +88,47 @@ function actionIsIn {
 	fi
 }
 
-function addTime {
-	local time1
-	local time2
-	time1=$1
-	time2=$2
+function calcHours {
+	local file_array
+	mapfile file_array < $DEFAULT_FILE
+	local total_seconds
+	total_seconds=$(sumOneSheet file_array)
+	local readable_time
+	readable_time=$(makeSecondsReadable $total_seconds)
 
+	echo "Total time for $DEFAULT_FILE = $readable_time"
+}
 
+function sumOneSheet {
+	local -n input_arr
+	input_arr=$1
+	local total_seconds
+	total_seconds=0
+	for (( i = 0; i < ${#input_arr[@]}; i++ )); do
+		local cur_line
+		cur_line=${input_arr[$i]}
+		if actionIsIn "$(getAction "$cur_line")"; then
+			local next_line
+			next_line=${input_arr[$(( $i + 1 ))]}
+			epoch_one=$(date -d "$(getDateTime "$cur_line")" +"%s")
+			epoch_two=$(date -d "$(getDateTime "$next_line")" +"%s")
+			time_delta=$(( $epoch_two - $epoch_one ))
+			total_seconds=$(( $total_seconds + $time_delta ))
+		fi
+	done
+	
+	echo $total_seconds
+}
+
+function makeSecondsReadable {
+	local seconds
+	seconds=$1
+
+	hours=$(( $seconds / 3600 ))
+	total_minutes=$(( $seconds / 60 ))
+	minutes_remainder=$(( $total_minutes % 60 ))
+	seconds_remainder=$(( $seconds % 60 ))
+	readable_time="$hours hours and $minutes_remainder minutes"
+
+	echo $readable_time
 }
