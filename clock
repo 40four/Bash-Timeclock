@@ -3,20 +3,22 @@
 source timeclock.sh
 
 command=$1;
-clockStatus=$(getLastAction)
+# clockStatus=$(getLastAction)
 
 case "$command" in
 	in )
-		if [[ $clockStatus == 'OUT' || -z $clockStatus ]]; then
+		if lastActionIsValid 'OUT'; then
 			clockIn "$(getTags "$@")"
+		else
+			actionErrMessage ${command^^}
 		fi
-		echo "Nothing happened, you are already clocked in!"
 		;;
 	out )
-		if [[ $clockStatus == 'IN' || -z $clockStatus ]]; then
+		if lastActionIsValid 'IN'; then
 			clockOut "$(getTags "$@")"
+		else
+			actionErrMessage ${command^^}
 		fi
-		echo "Nothing happened, you are already clocked out!"
 		;;
 	hours )
 		calcHours

@@ -4,6 +4,16 @@ DELIM=" | "
 DEFAULT_FILE="$(date '+%a-%b-%d-%Y').timesheet"
 NOW=`date` 
 
+########################################
+# Clock in action, write new line to file
+# give user a success messasge
+# Globals:
+#   DELIM
+#   DEFAULT_FILE
+#   NOW
+# Arguments:
+#   Tags, if any given
+########################################
 function clockIn {
 	local this_line="IN$DELIM"
 	this_line+="$NOW$DELIM"
@@ -13,6 +23,16 @@ function clockIn {
 	exit 0
 }
 
+########################################
+# Clock out action. Write new line to file,
+# give user a success messge
+# Globals:
+#	DELIM
+#	DEFAULT_FILE
+#	NOW
+# Arguments:
+#	Tags, if any given
+########################################
 function clockOut {
 	local this_line="OUT$DELIM"
 	this_line+="$NOW$DELIM"
@@ -131,4 +151,35 @@ function makeSecondsReadable {
 	readable_time="$hours hours and $minutes_remainder minutes"
 
 	echo $readable_time
+}
+
+########################################
+# Show error messasge to user when consecutive in/ out action is attempted
+# Arguments:
+#   Action to display (in or out)
+########################################
+function actionErrMessage {
+	local this_action
+	this_action=$1
+
+	echo "Nothing happened, you are already clocked $this_action!"
+}
+
+########################################
+# Check that the last action taken matches given argument, and is not empty.
+# Call the appropriate true or false command. 
+# Arguments:
+#   Action to check against (in or out)
+########################################
+function lastActionIsValid {
+	local action
+	action=$1
+	local clockStatus
+	clockStatus=$(getLastAction)
+
+	if [[ $clockStatus == $action || -z $clockStatus ]]; then
+		true
+	else
+		false
+	fi
 }
