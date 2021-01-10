@@ -2,22 +2,24 @@
 
 source timeclock.sh
 
-command=$1;
-# clockStatus=$(getLastAction)
+command=$1
+current_action=${command^^}
+last_action=$(getLastAction)
+not_duplicate=$(actionIsDifferent $last_action $current_action)
 
 case "$command" in
 	in )
-		if lastActionIsValid 'OUT'; then
+		if $not_duplicate; then
 			clockIn "$(getTags "$@")"
 		else
-			actionErrMessage ${command^^}
+			actionErrMessage $current_action
 		fi
 		;;
 	out )
-		if lastActionIsValid 'IN'; then
+		if $not_duplicate; then
 			clockOut "$(getTags "$@")"
 		else
-			actionErrMessage ${command^^}
+			actionErrMessage $current_action
 		fi
 		;;
 	hours )

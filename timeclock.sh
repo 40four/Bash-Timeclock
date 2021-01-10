@@ -42,12 +42,20 @@ function clockOut {
 	exit 0
 }
 
+########################################
+# Display a message with usage instructions
+########################################
 function displayHelp {
 	echo "Nothing Happened"
 	echo "Usage: ./timeclock.sh <in|out> <tags/notes>"
 	exit 0
 }
 
+########################################
+# Look for a -t option flag and assign tag values if it exists
+# Arguments:
+#   $1 - All arguments $@
+########################################
 function getTags {
 	shift
 	local tag
@@ -72,6 +80,11 @@ function getTags {
 	echo $tag
 }
 
+########################################
+# Read the last line from the file and echo the action (in/out)
+# Globals:
+#   DEFAULT_FILE
+########################################
 function getLastAction {
 	local status
 	status=""
@@ -83,6 +96,11 @@ function getLastAction {
 	echo $status
 }
 
+########################################
+# Get the action from a single line
+# Arguments:
+#   $1 - one line from a timesheet file
+########################################
 function getAction {
 	local this_line
 	this_line=$1
@@ -90,6 +108,11 @@ function getAction {
 	echo $this_line | awk -F "$DELIM" '{print $1}'
 }
 
+########################################
+# Get the datetime from a single line
+# Arguments:
+#   $1 - one line from a timesheet file
+########################################
 function getDateTime {
 	local this_line
 	this_line=$1
@@ -97,6 +120,11 @@ function getDateTime {
 	echo $this_line | awk -v delim="$DELIM" -f csv.awk
 }
 
+########################################
+# Check that the given action is 'IN', call a true or false command
+# Arguments:
+#   $1 - An action
+########################################
 function actionIsIn {
 	local this_action
 	this_action=$1
@@ -108,6 +136,12 @@ function actionIsIn {
 	fi
 }
 
+########################################
+# Read the input file into an array, sum the total time worked, echo a 
+# human readable messasge.
+# Globals:
+#   DEFAULT_FILE
+########################################
 function calcHours {
 	local file_array
 	mapfile file_array < $DEFAULT_FILE
@@ -119,6 +153,12 @@ function calcHours {
 	echo "Total time for $DEFAULT_FILE = $readable_time"
 }
 
+########################################
+# Read the input file into an array, sum the total time worked, echo a 
+# human readable messasge.
+# Globals:
+#   DEFAULT_FILE
+########################################
 function sumOneSheet {
 	local -n input_arr
 	input_arr=$1
@@ -140,6 +180,12 @@ function sumOneSheet {
 	echo $total_seconds
 }
 
+########################################
+# Determine number of hours, minutes from the given number of seconds.
+# Echo a readable messasge.
+# Arguments:
+#   $1 - Int - total seconds
+########################################
 function makeSecondsReadable {
 	local seconds
 	seconds=$1
@@ -166,20 +212,21 @@ function actionErrMessage {
 }
 
 ########################################
-# Check that the last action taken matches given argument, and is not empty.
-# Call the appropriate true or false command. 
+# Check that the last recorded action is not the same as the current action. 
+# Does allow empty string. Call the appropriate true or false command. 
 # Arguments:
-#   Action to check against (in or out)
-########################################
-function lastActionIsValid {
-	local action
-	action=$1
-	local clockStatus
-	clockStatus=$(getLastAction)
+#   $1 - Last action from file
+#   $2 - Action to check against (in or out)
 
-	if [[ $clockStatus == $action || -z $clockStatus ]]; then
-		true
+########################################
+function actionIsDifferent {
+	local last_action
+	last_action=$1
+	local current_action
+	current_action=$2
+	if [[  $last_action != $current_action || -z $last_action ]]; then
+		echo true
 	else
-		false
+		echo false
 	fi
 }
